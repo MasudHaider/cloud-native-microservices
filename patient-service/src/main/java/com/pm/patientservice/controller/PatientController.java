@@ -25,9 +25,16 @@ public class PatientController {
         this.patientService = patientService;
     }
 
+    // http://localhost:4004/api/patients?page=1&size=10
     @GetMapping
     @Operation(summary = "Get the list of patients")
-    public ResponseEntity<List<PatientResponseDTO>> getPatients(){
+    public ResponseEntity<List<PatientResponseDTO>> getPatients(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "asc") String sort,
+            @RequestParam(defaultValue = "name") String sortField,
+            @RequestParam(defaultValue = "") String searchValue
+    ){
         List<PatientResponseDTO> patientResponseDTOList = patientService.getPatients();
 
         return ResponseEntity.ok().body(patientResponseDTOList);
