@@ -34,7 +34,7 @@ public class PatientService {
 
     public PagedPatientResponseDTO getPatients(int page, int size, String sort, String sortField, String searchValue){
 
-        Pageable pageable = PageRequest.of(page, size,
+        Pageable pageable = PageRequest.of(page-1 , size,
                 sort.equalsIgnoreCase("desc")
                         ? Sort.by(sortField).descending()
                         : Sort.by(sortField).ascending());
@@ -54,7 +54,7 @@ public class PatientService {
 
         return new PagedPatientResponseDTO(
                 patientResponseDTOs,
-                patientPage.getNumber(),
+                patientPage.getNumber() + 1,
                 patientPage.getSize(),
                 patientPage.getTotalPages(),
                 (int) patientPage.getTotalElements()
