@@ -1,3 +1,3 @@
-### GET request to example server
-GET http://localhost:4004/api/patients?sort=desc&size=2&page=1&searchValue=Peter
+###GET request to example server
+GET http://localhost:4004/api/patients?sort=asc&size=2&page=1
 Authorization: Bearer {{token}}
