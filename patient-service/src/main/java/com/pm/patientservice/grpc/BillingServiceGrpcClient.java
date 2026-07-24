@@ -3,7 +3,6 @@ package com.pm.patientservice.grpc;
 import billing.BillingRequest;
 import billing.BillingResponse;
 import billing.BillingServiceGrpc;
-import com.google.apps.card.v1.ActionOrBuilder;
 import com.pm.patientservice.kafka.KafkaProducer;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -18,16 +17,19 @@ import org.springframework.stereotype.Service;
 public class BillingServiceGrpcClient {
     private static final Logger log = LoggerFactory.getLogger(BillingServiceGrpcClient.class);
     private final BillingServiceGrpc.BillingServiceBlockingStub blockingStub;
+    private final KafkaProducer kafkaProducer;
 
     public BillingServiceGrpcClient(
             @Value("${billing.service.address:localhost}") String serverAddress,
-            @Value("${billing.service.grpc.port:9001}") int serverPort) {
+            @Value("${billing.service.grpc.port:9001}") int serverPort,
+            KafkaProducer kafkaProducer) {
         log.info("Connecting to billing service gRPC service at {}: {}", serverAddress, serverPort);
 
         ManagedChannel channel = ManagedChannelBuilder.forAddress(serverAddress,
                 serverPort).usePlaintext().build();
 
         blockingStub = BillingServiceGrpc.newBlockingStub(channel);
+        this.kafkaProducer = kafkaProducer;
     }
 
     @CircuitBreaker(name = "billingService", fallbackMethod = "billingFallback")
@@ -49,7 +51,7 @@ public class BillingServiceGrpcClient {
         log.warn("[CIRCUIT BREAKER]: Billing service is unavailable. Triggered " +
                 "fallback {}", t.getMessage());
 
-        KafkaProducer.sendBillingAccountEvent(patientId, name, email);
+        kafkaProducer.sendBillingAccountEvent(patientId, name, email);
 
         return BillingResponse.newBuilder()
                 .setAccountId("")
