@@ -4,6 +4,7 @@ import billing.BillingRequest;
 import billing.BillingResponse;
 import billing.BillingServiceGrpc;
 import com.google.apps.card.v1.ActionOrBuilder;
+import com.pm.patientservice.kafka.KafkaProducer;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
@@ -42,5 +43,17 @@ public class BillingServiceGrpcClient {
         log.info("Received response from billing service gRPC: {}", response);
 
         return response;
+    }
+
+    public BillingResponse billingFallback(String patientId, String name, String email, Throwable t){
+        log.warn("[CIRCUIT BREAKER]: Billing service is unavailable. Triggered " +
+                "fallback {}", t.getMessage());
+
+        KafkaProducer.sendBillingAccountEvent(patientId, name, email);
+
+        return BillingResponse.newBuilder()
+                .setAccountId("")
+                .setStatus("PENDING")
+                .build();
     }
 }
