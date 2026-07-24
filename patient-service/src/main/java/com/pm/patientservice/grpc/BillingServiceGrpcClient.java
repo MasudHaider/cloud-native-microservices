@@ -4,6 +4,8 @@ import billing.BillingRequest;
 import billing.BillingResponse;
 import billing.BillingServiceGrpc;
 import com.google.apps.card.v1.ActionOrBuilder;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.slf4j.Logger;
@@ -27,6 +29,8 @@ public class BillingServiceGrpcClient {
         blockingStub = BillingServiceGrpc.newBlockingStub(channel);
     }
 
+    @CircuitBreaker(name = "billingService", fallbackMethod = "billingFallback")
+    @Retry(name = "billingRetry")
     public BillingResponse createBillingAccount(String patientId, String name, String email){
         BillingRequest request = BillingRequest.newBuilder()
                 .setPatientId(patientId)
